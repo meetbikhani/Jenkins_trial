@@ -21,7 +21,7 @@ pipeline {
 
         stage('Build Docker Image') {
             steps {
-                sh 'docker build --no-cache --provenance=false -t $IMAGE_NAME:1.1.0 .'
+                sh 'docker build --no-cache --provenance=false -t $IMAGE_NAME:1.2.0 .'
             }
         }
 
@@ -36,7 +36,7 @@ pipeline {
 
                     sh '''
                     echo $DOCKER_PASS | docker login -u $DOCKER_USER --password-stdin
-                    docker push $IMAGE_NAME:1.1.0
+                    docker push $IMAGE_NAME:1.2.0
                     '''
                 }
             }
