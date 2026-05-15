@@ -19,13 +19,48 @@ pipeline {
             }
         }
 
-        stage('Build Docker Image') {
+        stage('Increment Version') {
+
             steps {
-                sh 'docker build --no-cache --provenance=false -t $IMAGE_NAME:1.2.1 .'
+
+                script {
+
+                    def version = readFile('version.txt').trim()
+
+                    def parts = version.tokenize('.')
+
+                    def major = parts[0].toInteger()
+                    def minor = parts[1].toInteger()
+                    def patch = parts[2].toInteger()
+
+                    patch++
+
+                    def newVersion = "${major}.${minor}.${patch}"
+
+                    writeFile file: 'version.txt', text: newVersion
+
+                    env.APP_VERSION = newVersion
+
+                    echo "New Version: ${newVersion}"
+                }
+            }
+        }
+
+        stage('Build Docker Image') {
+
+            steps {
+
+                sh """
+                docker build \
+                --no-cache \
+                --provenance=false \
+                -t $IMAGE_NAME:$APP_VERSION .
+                """
             }
         }
 
         stage('Push Docker Image') {
+
             steps {
 
                 withCredentials([usernamePassword(
@@ -36,8 +71,30 @@ pipeline {
 
                     sh '''
                     echo $DOCKER_PASS | docker login -u $DOCKER_USER --password-stdin
-                    docker push $IMAGE_NAME:1.2.1
+
+                    docker push $IMAGE_NAME:$APP_VERSION
                     '''
+                }
+            }
+        }
+
+        stage('Commit Version Update') {
+
+            steps {
+
+                sshagent(credentials: ['github-ssh']) {
+
+                    sh """
+
+                    git config user.name "Jenkins CI"
+                    git config user.email "jenkins@gmail.com"
+
+                    git add version.txt
+
+                    git commit -m "ci: bump version to $APP_VERSION"
+
+                    git push origin main
+                    """
                 }
             }
         }
