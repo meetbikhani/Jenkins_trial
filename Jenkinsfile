@@ -2,7 +2,7 @@ pipeline {
     agent any
 
     environment {
-        IMAGE_NAME = "meetbikhani/react-app"
+        IMAGE_NAME = "meetbikhani/jenkins_trial"
     }
 
     stages {
