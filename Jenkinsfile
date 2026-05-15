@@ -21,7 +21,7 @@ pipeline {
 
         stage('Build Docker Image') {
             steps {
-                sh 'docker build --no-cache -t $IMAGE_NAME:1.1.0 .'
+                sh 'docker build --no-cache --provenance=false -t $IMAGE_NAME:1.1.0 .'
             }
         }
 
