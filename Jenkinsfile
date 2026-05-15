@@ -82,7 +82,7 @@ pipeline {
 
             steps {
 
-                sshagent(credentials: ['github-ssh']) {
+                sshagent(credentials: ['git']) {
 
                     sh """
 
