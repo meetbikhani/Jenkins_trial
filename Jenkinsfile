@@ -65,13 +65,9 @@ pipeline {
 
                     patch++
 
-                    def newVersion = "${major}.${minor}.${patch}"
+                    env.APP_VERSION = "${major}.${minor}.${patch}"
 
-                    writeFile file: 'version.txt', text: newVersion
-
-                    env.APP_VERSION = newVersion
-
-                    echo "New Version: ${newVersion}"
+                    echo "New Version: ${env.APP_VERSION}"
                 }
             }
         }
@@ -111,17 +107,21 @@ pipeline {
         stage('Commit Version Update') {
 
             steps {
+
                 sshagent(credentials: ['git']) {
 
                     sh '''
                         git config user.name "Jenkins CI"
+
                         git config user.email "jenkins@gmail.com"
 
-                        git pull origin main --rebase
+                        git pull origin main
+
+                        echo $APP_VERSION > version.txt
 
                         git add version.txt
 
-                        git commit -m "ci: bump version to ${APP_VERSION}" || echo "No changes to commit"
+                        git commit -m "ci: bump version to $APP_VERSION" || echo "No changes to commit"
 
                         git push origin HEAD:main
                     '''
