@@ -116,6 +116,7 @@ pipeline {
 
                     sh '''
                         git checkout main
+                        git pull origin main
 
                         git config user.name "Jenkins CI"
                         git config user.email "jenkins@gmail.com"
