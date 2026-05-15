@@ -111,21 +111,19 @@ pipeline {
         stage('Commit Version Update') {
 
             steps {
-
                 sshagent(credentials: ['git']) {
 
                     sh '''
-                        git checkout main
-                        git pull origin main
-
                         git config user.name "Jenkins CI"
                         git config user.email "jenkins@gmail.com"
+
+                        git pull origin main --rebase
 
                         git add version.txt
 
                         git commit -m "ci: bump version to ${APP_VERSION}" || echo "No changes to commit"
 
-                        git push origin main
+                        git push origin HEAD:main
                     '''
                 }
             }
