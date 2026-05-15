@@ -1,19 +1,49 @@
 pipeline {
+
     agent any
 
     environment {
         IMAGE_NAME = "meetbikhani/jenkins_trial"
     }
 
+    triggers {
+        githubPush()
+    }
+
     stages {
 
+        stage('Skip Jenkins Auto Commit Build') {
+
+            steps {
+
+                script {
+
+                    def commitAuthor = sh(
+                        script: "git log -1 --pretty=format:'%ae'",
+                        returnStdout: true
+                    ).trim()
+
+                    echo "Last Commit Author: ${commitAuthor}"
+
+                    if (commitAuthor == "jenkins@gmail.com") {
+
+                        currentBuild.result = 'NOT_BUILT'
+
+                        error("Build skipped because commit was pushed by Jenkins itself.")
+                    }
+                }
+            }
+        }
+
         stage('Install Dependencies') {
+
             steps {
                 sh 'npm install'
             }
         }
 
         stage('Run Tests') {
+
             steps {
                 sh 'npm run test -- --run'
             }
@@ -79,22 +109,36 @@ pipeline {
         }
 
         stage('Commit Version Update') {
+
             steps {
+
                 sshagent(credentials: ['git']) {
+
                     sh '''
+                        git checkout main
+
                         git config user.name "Jenkins CI"
                         git config user.email "jenkins@gmail.com"
-        
-                        git checkout main
-        
+
                         git add version.txt
-        
-                        git commit -m "ci: bump version to ${VERSION}" || echo "No changes to commit"
-        
+
+                        git commit -m "ci: bump version to ${APP_VERSION}" || echo "No changes to commit"
+
                         git push origin main
                     '''
                 }
             }
+        }
+    }
+
+    post {
+
+        success {
+            echo "Pipeline completed successfully."
+        }
+
+        failure {
+            echo "Pipeline failed."
         }
     }
 }
